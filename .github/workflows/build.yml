@@ -1,0 +1,61 @@
+name: Build plugins
+on:
+  workflow_dispatch:
+    inputs:
+      plugin-list:
+        description: 'Selects a subset of plug-ins. Possible values: all, Core, Accessibility, CoreHaptics, GameController, GameKit, PHASE.'
+        type: string
+        default: all
+        required: true
+      platforms:
+        description: 'Selects the desired platforms. Possible values: all, iOS, macOS, tvOS, iPhoneSimulator, AppleTVSimulator, simulators, devices.'
+        type: string
+        default: all
+        required: true
+      build-config:
+        description: 'This option allows for the build of both Release and Debug variants. Possible values: all, Release, Debug.'
+        type: string
+        default: all
+        required: true
+  push:
+    branches:
+      - 'release/v3.0.0'
+env:
+  BUILD_PARAMETERS: '--platforms devices'
+jobs:
+  build:
+    name: Build plugins
+    runs-on: macos-14
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check Node version
+        run: node --version
+      - name: Setup Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3
+      - name: Check Python version
+        run: python --version
+      - name: Setup Xcode latest
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Check Xcode version
+        run: xcodebuild -version
+      - name: Prepare build parameters
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: echo BUILD_PARAMETERS=$(echo --plugin-list ${{ inputs.plugin-list }} --platforms ${{ inputs.platforms }} --build-config ${{ inputs.build-config }}) >> $GITHUB_ENV
+      - name: Build Plugins
+        run: python3 build.py --skip-codesign ${{ env.BUILD_PARAMETERS }}
+      - name: Upload build result as artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AppleUnityPlugins${{ github.event.created_at }}
+          path: Build
