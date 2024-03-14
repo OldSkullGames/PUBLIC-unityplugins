@@ -8,8 +8,10 @@ namespace Apple.Core
     {
         private static RuntimeEnvironment _runtimeEnvironment;
 
+#if UNITY_EDITOR_OSX && (UNITY_IOS || UNITY_TVOS || UNITY_STANDALONE_OSX)
         [DllImport(InteropUtility.DLLName, EntryPoint = "AppleCore_GetRuntimeEnvironment")]
         private static extern RuntimeEnvironment AppleCore_GetRuntimeEnvironment();
+#endif
 
         /// <summary>
         /// Use to ensure API methods are only called on platforms which support those calls.
@@ -37,7 +39,9 @@ namespace Apple.Core
         {
             Debug.Log("[Apple.Core Plug-In] Initializing API Availability Checking");
 
+#if UNITY_EDITOR_OSX && (UNITY_IOS || UNITY_TVOS || UNITY_STANDALONE_OSX)
             _runtimeEnvironment = AppleCore_GetRuntimeEnvironment();
+#endif
 
             Debug.Log($"[Apple.Core Plug-In] Availability Runtime Environment: {_runtimeEnvironment.RuntimeOperatingSystem.ToString()} {_runtimeEnvironment.VersionNumber.Major}.{_runtimeEnvironment.VersionNumber.Minor}");
         }
